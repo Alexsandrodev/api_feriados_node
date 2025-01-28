@@ -152,9 +152,6 @@ export async function getMunicipioById(codigo_ibge: string, data:string) {
 }
 
 export async function append_feriado(codigo_ibge: string, data: string, feriado:string) {
-    const novo_feriado = {
-        [data] : feriado
-    }
 
     if (codigo_ibge.length === 7){
         const resultado = await db
@@ -169,14 +166,12 @@ export async function append_feriado(codigo_ibge: string, data: string, feriado:
             return {status:404, message: `Município com código IBGE ${codigo_ibge} não encontrado.`}
         }
 
-        const feriadosAtuais = resultado[0].feriado || {};
-        console.log(feriadosAtuais)
-        const feriadosAtualizados = {...feriadosAtuais, ...novo_feriado}
-        console.log(feriadosAtualizados)
+        const feriadosAtuais = (resultado[0].feriado || {}) as Record<string, any>
+        feriadosAtuais[data] = { name: feriado };
 
         const updateResult = await db
                 .update(municipios)
-                .set({ feriados_municipais: feriadosAtualizados })
+                .set({ feriados_municipais: feriadosAtuais })
                 .where(eq(municipios.codigo_ibge, codigo_ibge));
 
         console.log('Resultado do Update:', updateResult);
@@ -195,14 +190,12 @@ export async function append_feriado(codigo_ibge: string, data: string, feriado:
         return {status:404, message: `Município com código IBGE ${codigo_ibge} não encontrado.`}
     }
 
-    const feriadosAtuais = resultado[0].feriado || {};
-    console.log(feriadosAtuais)
-    const feriadosAtualizados = {...feriadosAtuais, ...novo_feriado}
-    console.log(feriadosAtualizados)
+    const feriadosAtuais = (resultado[0].feriado || {}) as Record<string, any>
+    feriadosAtuais[data] = feriado;
 
     const updateResult = await db
             .update(estados)
-            .set({ feriados_estaduais: feriadosAtualizados })
+            .set({ feriados_estaduais: feriadosAtuais })
             .where(eq(estados.codigo_ibge, codigo_ibge));
 
     console.log('Resultado do Update:', updateResult);
