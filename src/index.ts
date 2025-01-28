@@ -1,5 +1,14 @@
+import pg from 'pg'
 import { drizzle } from 'drizzle-orm/node-postgres';
-import { estados, municipios} from './db/schema'
 
-export const db = drizzle("postgresql+psycopg2://postgres:123456@localhost:5432/");
+const { Pool } = pg;
 
+const pool = new Pool({
+  user: 'postgres',
+  host: 'localhost',
+  database: 'postgres',
+  password: '123456',
+  port: 5432,
+});
+
+export const db = drizzle(pool);
