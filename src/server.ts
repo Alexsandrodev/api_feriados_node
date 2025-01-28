@@ -1,10 +1,9 @@
 import express from 'express';
-import { criarServidor, getEstado, getMunicipioById } from './utils/utils';
+import { criarServidor, getEstado, getMunicipioById, append_feriado } from './utils/utils';
 
 const PORT = 8000
-
-
 const app = express()
+app.use(express.json())
 
 app.get('/feriados/:codigo_ibge/:data/', async (req, res) => {
     const {codigo_ibge, data} = req.params
@@ -23,7 +22,15 @@ app.get('/feriados/:codigo_ibge/:data/', async (req, res) => {
     }
 })
 
+app.put('/feriados/:codigo_ibge/:data/', async(req, res) =>{ 
+    const{codigo_ibge, data} = req.params
+    
+    const feriado = req.body
+    const { status, message } = await append_feriado(codigo_ibge, data, feriado)
 
+    res.status(status).send(message)
+
+}) 
 
 async function inicarServidor() {
     try {
