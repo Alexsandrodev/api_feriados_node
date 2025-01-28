@@ -4,6 +4,7 @@ import { Writable, Transform } from 'stream'
 import { db } from '../index'
 import { estados, municipios } from '../db/schema'
 import { eq } from 'drizzle-orm'
+import { isAwaitExpression } from 'typescript'
 
 
 function feriadosNacionais() {
@@ -86,26 +87,29 @@ export async function criarServidor() {
 export async function getEstado(codigo_ibge: string, data: string) {
     const resultado = (await db
         .select({
-            feriados: estados.feriados_nacionais,
+            feriados_nacionais: estados.feriados_nacionais,
+            feriados_estaduais: estados.feriados_estaduais,
+            
         })
         .from(estados)
-        .where(eq(estados.codigo_ibge, codigo_ibge))) as { feriados: string | Record<string, any> }[];
+        .where(eq(estados.codigo_ibge, codigo_ibge)));
 
     if (resultado.length === 0) {
         throw new Error("Estado não encontrado.");
     }
 
-    const dados = resultado[0].feriados;
+    const {feriados_nacionais, feriados_estaduais} = resultado[0]
 
-    // Verifica se é um objeto ou uma string JSON
-    const feriados_Nacionais =
-        typeof dados === "string" ? JSON.parse(dados) : dados;
+    if (feriados_estaduais){
+        const feriadoEstadual = (feriados_estaduais as Record<string, any>)[data] || null;
+        if (feriadoEstadual) {
+            return feriadoEstadual;
+    }}
 
-    // Busca o feriado específico
-    const feriado = feriados_Nacionais[data];
-
-    // Retorna o feriado em formato JSON
-    return JSON.stringify(feriado);
+    const feriadoNacional = (feriados_nacionais as Record<string, any>)[data] || null;
+    if (feriadoNacional) {
+        return feriadoNacional;
+    }
 }
 
 
@@ -146,3 +150,67 @@ export async function getMunicipioById(codigo_ibge: string, data:string) {
     }
     
 }
+
+export async function append_feriado(codigo_ibge: string, data: string, feriado:string) {
+    const novo_feriado = {
+        [data] : feriado
+    }
+
+    if (codigo_ibge.length === 7){
+        const resultado = await db
+        .select(
+            {feriado: municipios.feriados_municipais}
+        )
+        .from(municipios)
+        .where(eq(municipios.codigo_ibge, codigo_ibge))
+        
+        console.log(resultado)
+        if (resultado.length === 0) {
+            return {status:404, message: `Município com código IBGE ${codigo_ibge} não encontrado.`}
+        }
+
+        const feriadosAtuais = resultado[0].feriado || {};
+        console.log(feriadosAtuais)
+        const feriadosAtualizados = {...feriadosAtuais, ...novo_feriado}
+        console.log(feriadosAtualizados)
+
+        const updateResult = await db
+                .update(municipios)
+                .set({ feriados_municipais: feriadosAtualizados })
+                .where(eq(municipios.codigo_ibge, codigo_ibge));
+
+        console.log('Resultado do Update:', updateResult);
+
+        return {status: 201, message: `Feriado ${feriado[0]} adicionado ao município ${codigo_ibge} na data ${data}.`}
+} else if (codigo_ibge.length ===2 ){
+    const resultado = await db
+    .select(
+        {feriado: estados.feriados_estaduais}
+    )
+    .from(estados)
+    .where(eq(estados.codigo_ibge, codigo_ibge))
+    
+    console.log(resultado)
+    if (resultado.length === 0) {
+        return {status:404, message: `Município com código IBGE ${codigo_ibge} não encontrado.`}
+    }
+
+    const feriadosAtuais = resultado[0].feriado || {};
+    console.log(feriadosAtuais)
+    const feriadosAtualizados = {...feriadosAtuais, ...novo_feriado}
+    console.log(feriadosAtualizados)
+
+    const updateResult = await db
+            .update(estados)
+            .set({ feriados_estaduais: feriadosAtualizados })
+            .where(eq(estados.codigo_ibge, codigo_ibge));
+
+    console.log('Resultado do Update:', updateResult);
+
+    return {status: 201, message: `Feriado ${feriado[0]} adicionado ao município ${codigo_ibge} na data ${data}.`}
+} else{
+    return {status: 404, message: `codigo ibge invalido.`
+    }
+}
+}
+
