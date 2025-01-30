@@ -4,7 +4,8 @@ import * as t from "drizzle-orm/pg-core";
 export const estados = t.pgTable('estados', {
     codigo_ibge: t.varchar('codigo_ibge', {length:2}).primaryKey(),
     feriados_nacionais: t.json(),
-    feriados_estaduais: t.json()
+    feriados_estaduais: t.json(),
+    movel_nacional: t.varchar()
 }
 );
 
