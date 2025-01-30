@@ -1,4 +1,4 @@
-import  express  from "express";
+import express from "express";
 import feriadosRoutes from "./routes/feriadosRoutes";
 
 const app = express();
