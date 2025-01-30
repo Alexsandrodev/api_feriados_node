@@ -42,7 +42,8 @@ export async function initializeDatabase() {
             if (!estadoExiste) {
                 await db.insert(estados).values({
                     codigo_ibge: estadoCodigo,
-                    feriados_nacionais: feriadosNacionais()
+                    feriados_nacionais: feriadosNacionais(),
+                    movel_nacional: "Sexta-feira Santa"
                 });
             }
 
