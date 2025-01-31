@@ -1,21 +1,26 @@
 {
   "name": "teste_tecnico_node.js",
   "version": "1.0.0",
-  "type": "module",
-  "main": "./src/index.ts",
+  "type": "commonjs",
+  "main": "./src/server.ts",
   "scripts": {
-    "dev": "ts-node ./src/index.ts",
+    "dev": "ts-node ./src/server.ts",
     "build": "tsc",
-    "start": "node ./dist/index.js"
+    "migrate": "npx drizzle-kit push",
+    "start": "node ./dist/server.js",
+    "swagger-autogen": "node ./dist/swagger.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@ts-rest/core": "^3.51.0",
+    "@ts-rest/express": "^3.51.0",
     "@types/dotenv": "^6.1.1",
     "@types/express": "^5.0.0",
     "@types/papaparse": "^5.3.15",
+    "cors": "^2.8.5",
     "csv-parser": "^3.1.0",
     "dotenv": "^16.4.7",
     "drizzle-orm": "^0.39.0",
@@ -23,12 +28,17 @@
     "papaparse": "^5.5.1",
     "pg": "^8.13.1",
     "postgres": "^3.4.5",
+    "swagger-ui-express": "^5.0.1",
     "ts-node": "^10.9.2",
-    "typescript": "^5.7.3"
+    "typescript": "^5.7.3",
+    "zod": "^3.24.1"
   },
   "devDependencies": {
+    "@types/cors": "^2.8.17",
     "@types/pg": "^8.11.11",
+    "@types/swagger-ui-express": "^4.1.7",
     "drizzle-kit": "^0.30.3",
+    "swagger-autogen": "^2.23.7",
     "tsx": "^4.19.2"
   }
 }
