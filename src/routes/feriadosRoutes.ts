@@ -1,38 +1,31 @@
 import express from "express";
-import {  appendEstado,  deleteEstado, getEstado } from "../services/estadoService";
-import {  appendFeriadoMovel, appendMunicipio, deleteMunicipio, getMunicipio, removeFeriadoMovel } from "../services/municipioService";
+import { appendEstado, deleteEstado, getEstado } from "../services/estadoService";
+import { appendFeriadoMovel, appendMunicipio, deleteMunicipio, getMunicipio, removeFeriadoMovel } from "../services/municipioService";
 import { formatarFeriado, formatDate } from "../utils/utils";
 
 const router = express.Router();
 
-router.get("/:codigo_ibge/:data/", async (req, res) => {
+router.get("/feriados/:codigo_ibge/:data/", async (req, res) => {
     const { codigo_ibge, data } = req.params;
 
     try {
         const date = formatDate(data)
-        if (date.monthDay && date.year) {
-            try {
-                if (codigo_ibge.length === 7) {
-                    const feriado = await getMunicipio(codigo_ibge, date.year, date.monthDay);
-                    res.json(feriado);
-                } else if (codigo_ibge.length === 2) {
-                    const feriado = await getEstado(codigo_ibge, date.monthDay);
-                    res.json(feriado);
-                } else {
-                    res.status(404).json("codigo ibge Invalido.");
-                }
-            } catch (error) {
-                console.error("Erro ao consultar feriado:", error);
-                res.status(500).json({ message: "Erro interno ao buscar o feriado." });
-            }
-        } else if (!date.monthDay) {
-            const feriado = formatarFeriado(data)
-            if (feriado) {
-                if (codigo_ibge.length === 7) {
-                    const dada = 0
 
-                }
+        if (!date.monthDay) {
+            res.status(404).json({ message: 'data invalida' })
+        }
+        if (date.monthDay && date.year) {
+
+            if (codigo_ibge.length === 7) {
+                const feriado = await getMunicipio(codigo_ibge, date.year, date.monthDay);
+                res.status(feriado.status).json(feriado.response);
+            } else if (codigo_ibge.length === 2) {
+                const feriado = await getEstado(codigo_ibge, date.monthDay);
+                res.status(feriado.status).json(feriado.response)
+            } else {
+                res.status(404).json("codigo ibge Invalido.");
             }
+
         }
 
     } catch {
@@ -42,7 +35,7 @@ router.get("/:codigo_ibge/:data/", async (req, res) => {
 
 })
 
-router.put("/:codigo_ibge/:data/", async (req, res) => {
+router.put("/feriados/:codigo_ibge/:data/", async (req, res) => {
     const { codigo_ibge, data } = req.params;
     const feriado = req.body;
 
@@ -78,7 +71,7 @@ router.put("/:codigo_ibge/:data/", async (req, res) => {
     }
 })
 
-router.delete("/:codigo_ibge/:data", async (req, res) => {
+router.delete("/feriados/:codigo_ibge/:data", async (req, res) => {
     const { codigo_ibge, data } = req.params;
 
     try {
@@ -88,10 +81,8 @@ router.delete("/:codigo_ibge/:data", async (req, res) => {
             if (codigo_ibge.length === 7) {
                 const response = await deleteMunicipio(codigo_ibge, date.monthDay)
                 res.status(response.status).send(response.message)
-                console.log(response.status)
             } else if (codigo_ibge.length === 2) {
                 const response = await deleteEstado(codigo_ibge, date.monthDay)
-                console.log(response.status)
                 res.status(response.status).send(response.message)
             } else {
                 res.status(404).json("codigo ibge Invalido.")
