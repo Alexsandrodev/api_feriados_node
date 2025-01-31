@@ -13,7 +13,7 @@ export async function getEstado(codigo_ibge: string,data: string) {
         .where(eq(estados.codigo_ibge, codigo_ibge)));
 
     if (resultado.length === 0) {
-        throw new Error("Estado não encontrado.");
+        return {status:404, response: {message:"Código ibge invalido "}}
     }
 
     const { feriados_nacionais, feriados_estaduais } = resultado[0]
@@ -21,14 +21,16 @@ export async function getEstado(codigo_ibge: string,data: string) {
     if (feriados_estaduais) {
         const feriadoEstadual = (feriados_estaduais as Record<string, any>)[data] || null;
         if (feriadoEstadual) {
-            return feriadoEstadual;
+            return {status: 200, response: feriadoEstadual};
         }
     }
 
     const feriadoNacional = (feriados_nacionais as Record<string, any>)[data] || null;
     if (feriadoNacional) {
-        return feriadoNacional;
+        return {status:200, response: feriadoNacional};
     }
+
+    return {status:404, response: {message:"Nenhum feriado encontrado."}};
 }
 
 export async function appendEstado(codigo_ibge: string, data: string, feriado: string) {

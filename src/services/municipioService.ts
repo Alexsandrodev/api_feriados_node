@@ -2,6 +2,7 @@ import { db } from "../db/connection";
 import { estados, municipios } from "../db/schema";
 import { eq } from "drizzle-orm";
 import { Feriados } from "../utils/feriadosMoveis";
+import { any } from "zod";
 
 export async function getMunicipio(codigo_ibge: string, ano:number, data: string) {
     const resultado = await db
@@ -17,7 +18,7 @@ export async function getMunicipio(codigo_ibge: string, ano:number, data: string
         .leftJoin(estados, eq(municipios.estado_id, estados.codigo_ibge));;
 
     if (resultado.length === 0) {
-        return null
+        return {status:404, response: {message:"Código ibge invalido "}}
     }
 
     const { feriados_nacionais, feriados_estaduais, feriados_municipais, moveis_nacionais, moveis_municipal } = resultado[0]
@@ -38,14 +39,15 @@ export async function getMunicipio(codigo_ibge: string, ano:number, data: string
         
 
         if (existeNosMoveis){
-            return feriado_moveis[data]
+            const response = feriado_moveis[data]
+            return {status:200, response}
         }
     }
 
     if (feriados_municipais) {
         const feriadoMunicipal = (feriados_municipais as Record<string, any>)[data] || null;
         if (feriadoMunicipal) {
-            return feriadoMunicipal;
+            return {status: 200, response: feriadoMunicipal};
         }
     }
 
@@ -53,15 +55,16 @@ export async function getMunicipio(codigo_ibge: string, ano:number, data: string
     if (feriados_estaduais) {
         const feriadoEstadual = (feriados_estaduais as Record<string, any>)[data] || null;
         if (feriadoEstadual) {
-            return feriadoEstadual;
+            return {status: 200, response: feriadoEstadual};
         }
     }
 
     const feriadoNacional = (feriados_nacionais as Record<string, any>)[data] || null;
     if (feriadoNacional) {
-        return feriadoNacional;
+        return {status:200, response: feriadoNacional};
     }
 
+    return {status:404, response: {message:"Nenhum feriado encontrado."}};
 }
 
 export async function appendMunicipio(codigo_ibge: string, data: string, feriado: string) {
